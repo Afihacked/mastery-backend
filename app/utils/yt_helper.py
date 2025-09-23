@@ -1,10 +1,10 @@
 import os
 from yt_dlp import YoutubeDL, DownloadError
 
-def extract_info(url: str):
+def extract_info(url: str, format: str = None):
     """
-    Ambil metadata + semua kualitas video yang tersedia dari YouTube.
-    Menggunakan cookies dari ENV jika tersedia (untuk bypass age/captcha).
+    Ambil metadata + semua kualitas video/audio dari YouTube.
+    Bisa dibatasi format tertentu (contoh: 'bestaudio/best').
     """
     cookies = os.getenv("YT_COOKIES")
 
@@ -13,7 +13,7 @@ def extract_info(url: str):
         "skip_download": True,
         "extract_flat": False,
         "nocheckcertificate": True,
-        "ignoreerrors": True,   # jangan crash jika video unavailable
+        "ignoreerrors": True,   # jangan crash kalau video unavailable
         "noplaylist": True,
     }
 
@@ -24,6 +24,10 @@ def extract_info(url: str):
             f.write(cookies)
         ydl_opts["cookiefile"] = cookie_file
 
+    # Kalau user minta format tertentu (misalnya audio)
+    if format:
+        ydl_opts["format"] = format
+
     try:
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -31,10 +35,20 @@ def extract_info(url: str):
             if not info:
                 return {"success": False, "error": "Tidak bisa mengambil info video."}
 
-            # Ambil semua format video
+            # Kalau format audio saja → langsung return URL audio
+            if format:
+                return {
+                    "success": True,
+                    "title": info.get("title"),
+                    "thumbnail": info.get("thumbnail"),
+                    "duration": info.get("duration"),
+                    "url": info.get("url"),  # link direct audio
+                    "ext": info.get("ext")
+                }
+
+            # Default: return semua format video/audio
             formats = []
             for f in info.get("formats", []):
-                # Hanya format valid dengan URL
                 if f.get("url"):
                     formats.append({
                         "format_id": f.get("format_id"),
