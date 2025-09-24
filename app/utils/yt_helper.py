@@ -15,7 +15,25 @@ def extract_info(url: str, format: str = None):
         "nocheckcertificate": True,
         "ignoreerrors": True,   # jangan crash kalau video unavailable
         "noplaylist": True,
+
+        # ⚡ Anti-429
+        "sleep_interval": 2,         # jeda antar request
+        "max_sleep_interval": 5,     # acak delay max 5 detik
+        "throttled_rate": 1000000,   # batasi speed (1 MB/s biar ga dianggap bot)
+
+        # ⚡ Bypass deteksi bot dengan UA + extractor args
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/120.0 Safari/537.36"
+        },
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["web"]  # bisa dicoba "android", "tv" juga
+            }
+        }
     }
+
 
     # Jika ada cookies di environment → tulis sementara di /tmp
     if cookies:
